@@ -46,9 +46,9 @@ end)
 
 -- Criar o botão de abrir/fechar menu
 local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0, 100, 0, 40)
+toggleButton.Size = UDim2.new(0, 150, 0, 40)
 toggleButton.Position = UDim2.new(0.1, 0, 0.1, 0)
-toggleButton.Text = "Menu"
+toggleButton.Text = "Abrir Menu"
 toggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.Font = Enum.Font.Gotham
@@ -60,16 +60,16 @@ toggleButton.Draggable = true -- Botão arrastável
 
 -- Criar o frame principal
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 350, 0, 500)
-mainFrame.Position = UDim2.new(0.5, -175, 0.5, -250)
+mainFrame.Size = UDim2.new(0, 400, 0, 500)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -250) -- Centralizado
 mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 mainFrame.BorderSizePixel = 0
 mainFrame.Visible = false
-mainFrame.Parent = screenGui
 mainFrame.Active = true
-mainFrame.Draggable = true -- Menu arrastável
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
 
--- Criar sombra do menu
+-- Criar efeito de sombra para o frame principal
 local shadow = Instance.new("ImageLabel")
 shadow.Size = UDim2.new(1, 20, 1, 20)
 shadow.Position = UDim2.new(0, -10, 0, -10)
@@ -80,80 +80,99 @@ shadow.ImageTransparency = 0.5
 shadow.ZIndex = 0
 shadow.Parent = mainFrame
 
--- Botões laterais
+-- Alternar visibilidade do menu
+toggleButton.MouseButton1Click:Connect(function()
+    mainFrame.Visible = not mainFrame.Visible
+    toggleButton.Text = mainFrame.Visible and "Fechar Menu" or "Abrir Menu"
+end)
+
+-- Criar os botões laterais
 local menuButtons = {"HOME", "MAIN", "ABOUT"}
 local buttonContainer = Instance.new("Frame")
-buttonContainer.Size = UDim2.new(0, 100, 1, 0)
+buttonContainer.Size = UDim2.new(0, 120, 1, 0)
 buttonContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 buttonContainer.BorderSizePixel = 0
 buttonContainer.Parent = mainFrame
 
--- Conteúdo do menu
-local contentFrame = Instance.new("ScrollingFrame")
-contentFrame.Size = UDim2.new(1, -100, 1, 0)
-contentFrame.Position = UDim2.new(0, 100, 0, 0)
+-- Criar o frame de conteúdo
+local contentFrame = Instance.new("Frame")
+contentFrame.Size = UDim2.new(1, -120, 1, 0)
+contentFrame.Position = UDim2.new(0, 120, 0, 0)
 contentFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 contentFrame.BorderSizePixel = 0
-contentFrame.ScrollBarThickness = 6 -- Rolagem fina
 contentFrame.Parent = mainFrame
 
--- Adicionar funções no MAIN
-local function addFunction(name, callback)
-    local funcButton = Instance.new("TextButton")
-    funcButton.Size = UDim2.new(1, 0, 0, 40)
-    funcButton.Text = name
-    funcButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    funcButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    funcButton.Font = Enum.Font.Gotham
-    funcButton.TextSize = 14
-    funcButton.Parent = contentFrame
-    funcButton.MouseButton1Click:Connect(callback)
+-- Criar scroll para o conteúdo (lista deslizável)
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, -20, 1, -20)
+scrollFrame.Position = UDim2.new(0, 10, 0, 10)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0) -- Será ajustado dinamicamente
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.ScrollBarThickness = 5
+scrollFrame.Parent = contentFrame
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 5)
+layout.Parent = scrollFrame
+
+-- Atualizar CanvasSize ao adicionar itens
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
+end)
+
+-- Função para limpar o conteúdo do frame
+local function clearContent()
+    for _, child in ipairs(scrollFrame:GetChildren()) do
+        if not child:IsA("UIListLayout") then
+            child:Destroy()
+        end
+    end
 end
 
--- Funções: MAIN
-addFunction("Aumentar Pulo", function()
-    local humanoid = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
-    if humanoid then
-        humanoid.JumpPower = humanoid.JumpPower + 50
-    end
-end)
+-- Criar os botões do menu lateral
+for i, buttonText in ipairs(menuButtons) do
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, -20, 0, 40)
+    button.Position = UDim2.new(0, 10, 0, (i - 1) * 50 + 20)
+    button.Text = buttonText
+    button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 14
+    button.BorderSizePixel = 0
+    button.Parent = buttonContainer
 
-addFunction("Aumentar Velocidade", function()
-    local humanoid = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
-    if humanoid then
-        humanoid.WalkSpeed = humanoid.WalkSpeed + 20
-    end
-end)
-
-addFunction("Puxar Carro", function()
-    for _, v in ipairs(workspace.Vehicles:GetChildren()) do
-        if v:IsA("Model") then
-            v:SetPrimaryPartCFrame(game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(5, 0, 0))
-            break
+    button.MouseButton1Click:Connect(function()
+        clearContent()
+        if buttonText == "HOME" then
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, 0, 0, 40)
+            label.Text = "Criador: allvesz"
+            label.TextColor3 = Color3.fromRGB(255, 255, 255)
+            label.BackgroundTransparency = 1
+            label.Font = Enum.Font.Gotham
+            label.TextSize = 16
+            label.Parent = scrollFrame
+        elseif buttonText == "MAIN" then
+            for j = 1, 5 do
+                local funcButton = Instance.new("TextButton")
+                funcButton.Size = UDim2.new(1, 0, 0, 40)
+                funcButton.Text = "Função " .. j
+                funcButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                funcButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                funcButton.Font = Enum.Font.Gotham
+                funcButton.TextSize = 14
+                funcButton.Parent = scrollFrame
+            end
+        elseif buttonText == "ABOUT" then
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, 0, 0, 40)
+            label.Text = "Instagram: allvesz_dz7"
+            label.TextColor3 = Color3.fromRGB(255, 255, 255)
+            label.BackgroundTransparency = 1
+            label.Font = Enum.Font.Gotham
+            label.TextSize = 16
+            label.Parent = scrollFrame
         end
-    end
-end)
-
-addFunction("Liberar Todas as Portas", function()
-    for _, door in pairs(workspace.Prison_Doors:GetChildren()) do
-        if door:FindFirstChild("Open") then
-            fireclickdetector(door.Open.ClickDetector)
-        end
-    end
-end)
-
-addFunction("Armas Infinitas", function()
-    local backpack = game.Players.LocalPlayer.Backpack
-    for _, weapon in ipairs(workspace.Prison_Items:GetChildren()) do
-        weapon:Clone().Parent = backpack
-    end
-end)
-
-addFunction("Virar Guardião", function()
-    game.Players.LocalPlayer.Team = game.Teams.Guards
-end)
-
--- Função para abrir/fechar o menu
-toggleButton.MouseButton1Click:Connect(function()
-    mainFrame.Visible = not mainFrame.Visible
-end)
+    end)
+end
