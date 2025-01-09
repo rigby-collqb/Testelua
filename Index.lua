@@ -60,13 +60,11 @@ toggleButton.Draggable = true -- Botão arrastável
 
 -- Criar o frame principal
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 400, 0, 500)
-mainFrame.Position = UDim2.new(0.5, -200, 0.5, -250) -- Centralizado
+mainFrame.Size = UDim2.new(0, 0, 0, 0)
+mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 mainFrame.BorderSizePixel = 0
 mainFrame.Visible = false
-mainFrame.Active = true
-mainFrame.Draggable = true
 mainFrame.Parent = screenGui
 
 -- Criar efeito de sombra para o frame principal
@@ -80,13 +78,28 @@ shadow.ImageTransparency = 0.5
 shadow.ZIndex = 0
 shadow.Parent = mainFrame
 
--- Alternar visibilidade do menu
-toggleButton.MouseButton1Click:Connect(function()
-    mainFrame.Visible = not mainFrame.Visible
-    toggleButton.Text = mainFrame.Visible and "Fechar Menu" or "Abrir Menu"
-end)
+-- Função para animar abertura/fechamento do menu
+local function toggleMenu()
+    if mainFrame.Visible then
+        for i = 1, 10 do
+            mainFrame.Size = UDim2.new(0, 400 - (40 * i), 0, 500 - (50 * i))
+            mainFrame.Position = UDim2.new(0.5, -mainFrame.Size.X.Offset / 2, 0.5, -mainFrame.Size.Y.Offset / 2)
+            task.wait(0.02)
+        end
+        mainFrame.Visible = false
+    else
+        mainFrame.Visible = true
+        for i = 1, 10 do
+            mainFrame.Size = UDim2.new(0, 40 * i, 0, 50 * i)
+            mainFrame.Position = UDim2.new(0.5, -mainFrame.Size.X.Offset / 2, 0.5, -mainFrame.Size.Y.Offset / 2)
+            task.wait(0.02)
+        end
+    end
+end
 
--- Criar os botões laterais
+toggleButton.MouseButton1Click:Connect(toggleMenu)
+
+-- Botões laterais
 local menuButtons = {"HOME", "MAIN", "ABOUT"}
 local buttonContainer = Instance.new("Frame")
 buttonContainer.Size = UDim2.new(0, 120, 1, 0)
@@ -94,7 +107,7 @@ buttonContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 buttonContainer.BorderSizePixel = 0
 buttonContainer.Parent = mainFrame
 
--- Criar o frame de conteúdo
+-- Conteúdo do menu
 local contentFrame = Instance.new("Frame")
 contentFrame.Size = UDim2.new(1, -120, 1, 0)
 contentFrame.Position = UDim2.new(0, 120, 0, 0)
@@ -102,77 +115,41 @@ contentFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 contentFrame.BorderSizePixel = 0
 contentFrame.Parent = mainFrame
 
--- Criar scroll para o conteúdo (lista deslizável)
-local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Size = UDim2.new(1, -20, 1, -20)
-scrollFrame.Position = UDim2.new(0, 10, 0, 10)
-scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0) -- Será ajustado dinamicamente
-scrollFrame.BackgroundTransparency = 1
-scrollFrame.ScrollBarThickness = 5
-scrollFrame.Parent = contentFrame
+-- Adicionar funções no MAIN
+local function addFunction(name, callback)
+    local funcButton = Instance.new("TextButton")
+    funcButton.Size = UDim2.new(1, 0, 0, 40)
+    funcButton.Text = name
+    funcButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    funcButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    funcButton.Font = Enum.Font.Gotham
+    funcButton.TextSize = 14
+    funcButton.Parent = contentFrame
+    funcButton.MouseButton1Click:Connect(callback)
+end
 
-local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 5)
-layout.Parent = scrollFrame
-
--- Atualizar CanvasSize ao adicionar itens
-layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
+-- Função: Aumentar pulo
+addFunction("Aumentar Pulo", function()
+    local humanoid = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+    if humanoid then
+        humanoid.JumpPower = humanoid.JumpPower + 50
+    end
 end)
 
--- Função para limpar o conteúdo do frame
-local function clearContent()
-    for _, child in ipairs(scrollFrame:GetChildren()) do
-        if not child:IsA("UIListLayout") then
-            child:Destroy()
+-- Função: Aumentar velocidade
+addFunction("Aumentar Velocidade", function()
+    local humanoid = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+    if humanoid then
+        humanoid.WalkSpeed = humanoid.WalkSpeed + 20
+    end
+end)
+
+-- Função: Puxar carro
+addFunction("Puxar Carro", function()
+    for _, v in ipairs(workspace.Vehicles:GetChildren()) do
+        if v:IsA("Model") then
+            v:SetPrimaryPartCFrame(game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(5, 0, 0))
+            break
         end
     end
-end
-
--- Criar os botões do menu lateral
-for i, buttonText in ipairs(menuButtons) do
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, -20, 0, 40)
-    button.Position = UDim2.new(0, 10, 0, (i - 1) * 50 + 20)
-    button.Text = buttonText
-    button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.Font = Enum.Font.Gotham
-    button.TextSize = 14
-    button.BorderSizePixel = 0
-    button.Parent = buttonContainer
-
-    button.MouseButton1Click:Connect(function()
-        clearContent()
-        if buttonText == "HOME" then
-            local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(1, 0, 0, 40)
-            label.Text = "Criador: allvesz"
-            label.TextColor3 = Color3.fromRGB(255, 255, 255)
-            label.BackgroundTransparency = 1
-            label.Font = Enum.Font.Gotham
-            label.TextSize = 16
-            label.Parent = scrollFrame
-        elseif buttonText == "MAIN" then
-            for j = 1, 5 do
-                local funcButton = Instance.new("TextButton")
-                funcButton.Size = UDim2.new(1, 0, 0, 40)
-                funcButton.Text = "Função " .. j
-                funcButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-                funcButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-                funcButton.Font = Enum.Font.Gotham
-                funcButton.TextSize = 14
-                funcButton.Parent = scrollFrame
-            end
-        elseif buttonText == "ABOUT" then
-            local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(1, 0, 0, 40)
-            label.Text = "Instagram: allvesz_dz7"
-            label.TextColor3 = Color3.fromRGB(255, 255, 255)
-            label.BackgroundTransparency = 1
-            label.Font = Enum.Font.Gotham
-            label.TextSize = 16
-            label.Parent = scrollFrame
-        end
-    end)
-end
+end)
