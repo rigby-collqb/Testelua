@@ -1,4 +1,3 @@
--- Criando a interface do botão
 local player = game.Players.LocalPlayer
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = player.PlayerGui
@@ -30,21 +29,20 @@ button.MouseButton1Up:Connect(function()
 	dragging = false
 end)
 
--- Função para tocar o som no servidor
-local function playSound()
+-- Função para tocar o som para o jogador e jogadores próximos
+button.MouseButton1Click:Connect(function()
 	local soundId = "rbxassetid://12222005"
 	local sound = Instance.new("Sound")
 	sound.SoundId = soundId
-	sound.Parent = game.Workspace
+	sound.Parent = player.Character:FindFirstChild("HumanoidRootPart")
+	sound:Play()
 
+	-- Tocar som para jogadores próximos
 	for _, plr in pairs(game.Players:GetPlayers()) do
-		if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+		if plr.Character and (plr.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude < 50 then
 			local soundClone = sound:Clone()
 			soundClone.Parent = plr.Character:FindFirstChild("HumanoidRootPart")
 			soundClone:Play()
 		end
 	end
-end
-
--- Quando o botão é clicado, toca o som
-button.MouseButton1Click:Connect(playSound)
+end)
