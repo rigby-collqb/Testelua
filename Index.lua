@@ -46,9 +46,9 @@ end)
 
 -- Criar o botão de abrir/fechar menu
 local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0, 150, 0, 40)
+toggleButton.Size = UDim2.new(0, 100, 0, 40)
 toggleButton.Position = UDim2.new(0.1, 0, 0.1, 0)
-toggleButton.Text = "Abrir Menu"
+toggleButton.Text = "Menu"
 toggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.Font = Enum.Font.Gotham
@@ -60,14 +60,16 @@ toggleButton.Draggable = true -- Botão arrastável
 
 -- Criar o frame principal
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 0, 0, 0)
-mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+mainFrame.Size = UDim2.new(0, 350, 0, 500)
+mainFrame.Position = UDim2.new(0.5, -175, 0.5, -250)
 mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 mainFrame.BorderSizePixel = 0
 mainFrame.Visible = false
 mainFrame.Parent = screenGui
+mainFrame.Active = true
+mainFrame.Draggable = true -- Menu arrastável
 
--- Criar efeito de sombra para o frame principal
+-- Criar sombra do menu
 local shadow = Instance.new("ImageLabel")
 shadow.Size = UDim2.new(1, 20, 1, 20)
 shadow.Position = UDim2.new(0, -10, 0, -10)
@@ -78,41 +80,21 @@ shadow.ImageTransparency = 0.5
 shadow.ZIndex = 0
 shadow.Parent = mainFrame
 
--- Função para animar abertura/fechamento do menu
-local function toggleMenu()
-    if mainFrame.Visible then
-        for i = 1, 10 do
-            mainFrame.Size = UDim2.new(0, 400 - (40 * i), 0, 500 - (50 * i))
-            mainFrame.Position = UDim2.new(0.5, -mainFrame.Size.X.Offset / 2, 0.5, -mainFrame.Size.Y.Offset / 2)
-            task.wait(0.02)
-        end
-        mainFrame.Visible = false
-    else
-        mainFrame.Visible = true
-        for i = 1, 10 do
-            mainFrame.Size = UDim2.new(0, 40 * i, 0, 50 * i)
-            mainFrame.Position = UDim2.new(0.5, -mainFrame.Size.X.Offset / 2, 0.5, -mainFrame.Size.Y.Offset / 2)
-            task.wait(0.02)
-        end
-    end
-end
-
-toggleButton.MouseButton1Click:Connect(toggleMenu)
-
 -- Botões laterais
 local menuButtons = {"HOME", "MAIN", "ABOUT"}
 local buttonContainer = Instance.new("Frame")
-buttonContainer.Size = UDim2.new(0, 120, 1, 0)
+buttonContainer.Size = UDim2.new(0, 100, 1, 0)
 buttonContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 buttonContainer.BorderSizePixel = 0
 buttonContainer.Parent = mainFrame
 
 -- Conteúdo do menu
-local contentFrame = Instance.new("Frame")
-contentFrame.Size = UDim2.new(1, -120, 1, 0)
-contentFrame.Position = UDim2.new(0, 120, 0, 0)
+local contentFrame = Instance.new("ScrollingFrame")
+contentFrame.Size = UDim2.new(1, -100, 1, 0)
+contentFrame.Position = UDim2.new(0, 100, 0, 0)
 contentFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 contentFrame.BorderSizePixel = 0
+contentFrame.ScrollBarThickness = 6 -- Rolagem fina
 contentFrame.Parent = mainFrame
 
 -- Adicionar funções no MAIN
@@ -128,7 +110,7 @@ local function addFunction(name, callback)
     funcButton.MouseButton1Click:Connect(callback)
 end
 
--- Função: Aumentar pulo
+-- Funções: MAIN
 addFunction("Aumentar Pulo", function()
     local humanoid = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
     if humanoid then
@@ -136,7 +118,6 @@ addFunction("Aumentar Pulo", function()
     end
 end)
 
--- Função: Aumentar velocidade
 addFunction("Aumentar Velocidade", function()
     local humanoid = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
     if humanoid then
@@ -144,7 +125,6 @@ addFunction("Aumentar Velocidade", function()
     end
 end)
 
--- Função: Puxar carro
 addFunction("Puxar Carro", function()
     for _, v in ipairs(workspace.Vehicles:GetChildren()) do
         if v:IsA("Model") then
@@ -152,4 +132,28 @@ addFunction("Puxar Carro", function()
             break
         end
     end
+end)
+
+addFunction("Liberar Todas as Portas", function()
+    for _, door in pairs(workspace.Prison_Doors:GetChildren()) do
+        if door:FindFirstChild("Open") then
+            fireclickdetector(door.Open.ClickDetector)
+        end
+    end
+end)
+
+addFunction("Armas Infinitas", function()
+    local backpack = game.Players.LocalPlayer.Backpack
+    for _, weapon in ipairs(workspace.Prison_Items:GetChildren()) do
+        weapon:Clone().Parent = backpack
+    end
+end)
+
+addFunction("Virar Guardião", function()
+    game.Players.LocalPlayer.Team = game.Teams.Guards
+end)
+
+-- Função para abrir/fechar o menu
+toggleButton.MouseButton1Click:Connect(function()
+    mainFrame.Visible = not mainFrame.Visible
 end)
